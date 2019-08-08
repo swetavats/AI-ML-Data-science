@@ -1,0 +1,32 @@
+create database project;
+use project;
+create table project(state string,pc string,candidate string,party string,evm_vote int,postal_vote int,total_vote double,percent_vote double,rank int)row format delimited fields terminated by ',';
+load data local inpath 'Desktop/GE_india_2019_results.csv' into table project;
+create table q1 as select SUM(evm_vote) as EVM_VOTE,SUM(postal_vote) as POSTAL_VOTE,SUM(total_vote) as TOTAL_VOTE from project;
+create table q2 as select party,count(*) as total_won from project where rank=1 group by party;
+create table q3 as select state,party,count(party) as won from project where rank=1 and state IN ('Rajasthan','Madhya Pradesh','Punjab') group by state,party order by state limit 10;
+create table q4 as select party,avg(percent_vote) as percent_vote from project where state='Uttar Pradesh' group by party  order by percent_vote desc limit 5; 
+create table q5 as  select state,candidate,pc,party,total_vote,rank from project  where rank=1 order by total_vote desc limit 5;
+create table q6 as select party,count(*) as x from project group by party order by x desc limit 10;
+create table m1 as select state,pc,candidate,total_vote from project where rank=1 order by state;
+create table m2 as select state,pc,candidate,total_vote from project where rank=2 order by state;
+create table q7 as select m1.state as state,m1.pc as pc,m1.candidate as candidate,(m1.total_vote-m2.total_vote) as margin from m1 join m2 on(m1.pc=m2.pc) order by margin desc limit 10;
+create table q8 as select m1.state as state,m1.pc as pc,m1.candidate as candidate,(m1.total_vote-m2.total_vote) as margin from m1 join m2 on(m1.pc=m2.pc) order by margin limit 10;
+create table q9 as select state ,100*(sum(postal_vote)/sum(total_vote)) ar from project group by state order by ar desc limit 10;
+create table q10 as select state ,100*(sum(postal_vote)/sum(total_vote)) ar from project group by state order by ar limit 10;
+create table q11 as select party,state,avg(percent_vote) as percent_vote  from project where party='Bharatiya Janata Party'  group by party,state  order by percent_vote limit 10;
+create table q12 as select party,state,avg(percent_vote) as percent_vote  from project where party='Bharatiya Janata Party'  group by party,state  order by percent_vote desc limit 10;
+select * from q1;
+select * from q2;
+select * from q3;
+select * from q4;
+select * from q5;
+select * from q6;
+select * from q7;
+select * from q8;
+select * from q9;
+select * from q10;
+select * from q11;
+select * from q12;
+
+run :: $ hive -f 'Desktop/a1.hql'
